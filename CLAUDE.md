@@ -37,8 +37,10 @@ pnpm bundle:lambda      # esbuild to dist/lambda/index.mjs
 - Pin third-party GitHub Actions to a full commit SHA with the version in a comment (`uses: owner/action@<sha> # v1.2.3`).
 - Workflows default to `permissions: contents: read`. AWS access goes through GitHub OIDC only, never stored keys.
 - Keep secrets out of the repo. `.env` is git-ignored; document variables in `.env.example`.
+- No manual verification steps. If existing checks can't verify a change (Docker, cloud resources, a UI), add or extend a CI job in the same PR that does. A PR should never ask its reviewer to check something by hand.
 
 ## Gotchas
 
+- Cloud sessions have Docker installed but not running. Start it with `dockerd > /tmp/dockerd.log 2>&1 &`. The sandbox's HTTPS proxy can still break downloads inside image builds (self-signed certificate errors), so let CI build and test the image.
 - pnpm 12 refuses to install a dependency whose build script hasn't been approved. Approve it with `pnpm approve-builds <pkg>`, which records it under `allowBuilds` in `pnpm-workspace.yaml`.
 - `create_crashes.sql` is the legacy schema. It disagrees with the legacy queries on column names (see epic #4) and will be replaced by migrations (#18).
