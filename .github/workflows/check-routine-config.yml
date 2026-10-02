@@ -1,0 +1,51 @@
+name: Check Claude routine config (temporary)
+
+# One-off check that the routine variable and secret are configured.
+# Prints only presence, format and length; never the token itself.
+on: push
+
+permissions: {}
+
+jobs:
+  check:
+    name: Check variable and secret
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check
+        env:
+          ROUTINE_ID: ${{ vars.CLAUDE_ISSUE_ROUTINE_ID }}
+          ROUTINE_TOKEN: ${{ secrets.CLAUDE_ISSUE_ROUTINE_TOKEN }}
+          ID_AS_SECRET: ${{ secrets.CLAUDE_ISSUE_ROUTINE_ID != '' }}
+          TOKEN_AS_VARIABLE: ${{ vars.CLAUDE_ISSUE_ROUTINE_TOKEN != '' }}
+        run: |
+          status=0
+          echo "== Variable CLAUDE_ISSUE_ROUTINE_ID =="
+          if [ -z "$ROUTINE_ID" ]; then
+            echo "::error::Not set as a repository variable."
+            [ "$ID_AS_SECRET" = "true" ] && echo "::error::It exists as a SECRET instead. Recreate it under the Variables tab."
+            status=1
+          elif [[ "$ROUTINE_ID" =~ ^trig_[A-Za-z0-9]+$ ]]; then
+            echo "OK: set, and looks like a routine ID (trig_…${ROUTINE_ID: -4})"
+          elif [[ "$ROUTINE_ID" =~ (trig_[A-Za-z0-9]+) ]]; then
+            echo "::error::Set, but it contains more than the ID (probably the full URL). Use only: trig_…${BASH_REMATCH[1]: -4}"
+            status=1
+          else
+            echo "::error::Set, but it doesn't contain a trig_… routine ID."
+            status=1
+          fi
+
+          echo "== Secret CLAUDE_ISSUE_ROUTINE_TOKEN =="
+          if [ -z "$ROUTINE_TOKEN" ]; then
+            echo "::error::Not set as a repository secret."
+            status=1
+          else
+            echo "OK: set (${#ROUTINE_TOKEN} characters)"
+            if [[ "$ROUTINE_TOKEN" == sk-ant-* ]]; then echo "OK: has the expected sk-ant- prefix"; else echo "::warning::Doesn't start with sk-ant-; double-check you copied the whole token."; fi
+            if [[ "$ROUTINE_TOKEN" =~ [[:space:]] ]]; then echo "::error::Contains whitespace (a stray space or newline from copying)."; status=1; fi
+          fi
+          if [ "$TOKEN_AS_VARIABLE" = "true" ]; then
+            echo "::error::The token is ALSO saved as a plain VARIABLE, which is not secret. Delete that variable and regenerate the token."
+            status=1
+          fi
+          exit "$status"
