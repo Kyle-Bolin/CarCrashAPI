@@ -80,7 +80,9 @@ jobs:
         run: tflint --chdir=infra --recursive --format=compact
 
   plan:
-    name: Plan (${{ matrix.environment }})
+    # GitHub appends the matrix value, e.g. "Plan (staging)". An explicit
+    # ${{ matrix.* }} in the name shows up unexpanded when the job is skipped.
+    name: Plan
     needs: checks
     if: >-
       github.event_name == 'pull_request'
