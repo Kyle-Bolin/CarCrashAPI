@@ -1,0 +1,94 @@
+name: Deploy
+
+# Merge to main deploys to staging; a published release deploys to prod.
+#
+# The build job always runs. The deploy jobs stay skipped until AWS exists (#30)
+# and the repository variable DEPLOY_ENABLED is set to "true". Each GitHub
+# Environment (staging, prod) then needs the variables AWS_DEPLOY_ROLE_ARN and
+# AWS_REGION, and prod should require a reviewer.
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Lambda bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: pnpm bundle:lambda
+      - name: Package
+        run: cd dist/lambda && zip -q -X ../../lambda.zip index.mjs
+      # TODO(#36): publish to an S3 artifacts bucket keyed by commit SHA, with an
+      # SBOM and provenance attestation, so prod promotes the exact staging build.
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: lambda-${{ github.sha }}
+          path: lambda.zip
+          if-no-files-found: error
+          retention-days: 30
+
+  staging:
+    name: Deploy to staging
+    needs: build
+    if: github.event_name == 'push' && vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: staging
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write # OIDC token for AWS; no stored AWS keys
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: lambda-${{ github.sha }}
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Confirm AWS identity
+        run: aws sts get-caller-identity
+      - name: Deploy
+        run: |
+          echo "::error::Deploy steps are not implemented yet: terraform apply (#38), migrations (#39), function update and smoke tests (#40)."
+          exit 1
+
+  prod:
+    name: Deploy to prod
+    needs: build
+    if: github.event_name == 'release' && vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: prod
+    concurrency:
+      group: deploy-prod
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write # OIDC token for AWS; no stored AWS keys
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: lambda-${{ github.sha }}
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Confirm AWS identity
+        run: aws sts get-caller-identity
+      - name: Deploy
+        run: |
+          echo "::error::Deploy steps are not implemented yet: terraform apply (#38), migrations (#39), function update and smoke tests (#40)."
+          exit 1
