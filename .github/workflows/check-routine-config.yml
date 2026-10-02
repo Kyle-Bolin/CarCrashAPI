@@ -20,6 +20,11 @@ jobs:
           TOKEN_AS_VARIABLE: ${{ vars.CLAUDE_ISSUE_ROUTINE_TOKEN != '' }}
         run: |
           status=0
+          # Mirror claude-issue.yml, which strips whitespace before using the values.
+          [[ "$ROUTINE_ID" =~ [[:space:]] ]] && echo "Note: the variable has stray whitespace (e.g. a trailing newline); the workflow strips it."
+          [[ "$ROUTINE_TOKEN" =~ [[:space:]] ]] && echo "Note: the secret has stray whitespace; the workflow strips it."
+          ROUTINE_ID="${ROUTINE_ID//[[:space:]]/}"
+          ROUTINE_TOKEN="${ROUTINE_TOKEN//[[:space:]]/}"
           echo "== Variable CLAUDE_ISSUE_ROUTINE_ID =="
           if [ -z "$ROUTINE_ID" ]; then
             echo "::error::Not set as a repository variable."
@@ -42,7 +47,6 @@ jobs:
           else
             echo "OK: set (${#ROUTINE_TOKEN} characters)"
             if [[ "$ROUTINE_TOKEN" == sk-ant-* ]]; then echo "OK: has the expected sk-ant- prefix"; else echo "::warning::Doesn't start with sk-ant-; double-check you copied the whole token."; fi
-            if [[ "$ROUTINE_TOKEN" =~ [[:space:]] ]]; then echo "::error::Contains whitespace (a stray space or newline from copying)."; status=1; fi
           fi
           if [ "$TOKEN_AS_VARIABLE" = "true" ]; then
             echo "::error::The token is ALSO saved as a plain VARIABLE, which is not secret. Delete that variable and regenerate the token."
