@@ -18,6 +18,7 @@ pnpm dev                # watch mode, http://localhost:3000
 pnpm lint               # Biome check, the same as CI (`pnpm format` fixes formatting)
 pnpm typecheck
 pnpm test               # or test:coverage, which fails below 80% coverage
+pnpm test:docker        # build the image, start Compose, probe the API (needs Docker; CI runs it)
 pnpm build              # tsc to dist/
 pnpm bundle:lambda      # esbuild to dist/lambda/index.mjs
 ```
