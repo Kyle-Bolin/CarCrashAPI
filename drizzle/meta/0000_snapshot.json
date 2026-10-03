@@ -1,5 +1,5 @@
 {
-  "id": "2f6d5f0b-711c-4e43-b902-62c2313b5c27",
+  "id": "d1628c6a-987e-4a30-9339-5bdf5da5c406",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -28,13 +28,13 @@
         },
         "start_time": {
           "name": "start_time",
-          "type": "timestamp",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
         },
         "end_time": {
           "name": "end_time",
-          "type": "timestamp",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
         },
@@ -124,7 +124,7 @@
         },
         "weather_timestamp": {
           "name": "weather_timestamp",
-          "type": "timestamp",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
         },

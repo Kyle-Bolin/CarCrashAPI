@@ -64,6 +64,10 @@ pnpm build            # tsc to dist/
 pnpm bundle:lambda    # esbuild to dist/lambda/index.mjs
 ```
 
+## Database migrations
+
+The schema lives in `src/schema.ts` and the SQL migrations in `drizzle/`. After changing the schema, run `pnpm db:generate` and commit the new migration. Apply migrations with `pnpm db:migrate` (it reads `DATABASE_URL`). The app never migrates on startup, so run it as its own step before starting the API.
+
 ## Project links
 
 - **Roadmap:** [#2](https://github.com/Kyle-Bolin/CarCrashAPI/issues/2), with epics [#3](https://github.com/Kyle-Bolin/CarCrashAPI/issues/3) to [#9](https://github.com/Kyle-Bolin/CarCrashAPI/issues/9)
@@ -86,7 +90,3 @@ The source code does not have a license yet, so all rights are reserved for now 
 ---
 
 _This README is revisited as each epic lands and again at v1.0.0 ([#15](https://github.com/Kyle-Bolin/CarCrashAPI/issues/15))._
-
-## Database migrations
-
-The schema lives in `src/schema.ts` and the SQL migrations in `drizzle/`. After changing the schema, run `pnpm db:generate` and commit the new migration. Apply migrations with `pnpm db:migrate` (it reads `DATABASE_URL`). The app never migrates on startup, so run it as its own step before starting the API.

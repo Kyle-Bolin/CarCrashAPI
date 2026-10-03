@@ -18,6 +18,8 @@ pnpm dev                # watch mode, http://localhost:3000
 pnpm lint               # Biome check, the same as CI (`pnpm format` fixes formatting)
 pnpm typecheck
 pnpm test               # or test:coverage, which fails below 80% coverage
+pnpm db:generate        # write a migration from src/schema.ts changes (drizzle-kit)
+pnpm db:migrate         # apply migrations to DATABASE_URL
 pnpm test:docker        # build the image, start Compose, probe the API (needs Docker; CI runs it)
 pnpm build              # tsc to dist/
 pnpm bundle:lambda      # esbuild to dist/lambda/index.mjs
@@ -44,4 +46,4 @@ pnpm bundle:lambda      # esbuild to dist/lambda/index.mjs
 
 - Cloud sessions have Docker installed but not running. Start it with `dockerd > /tmp/dockerd.log 2>&1 &`. The sandbox's HTTPS proxy can still break downloads inside image builds (self-signed certificate errors), so let CI build and test the image.
 - pnpm 12 refuses to install a dependency whose build script hasn't been approved. Approve it with `pnpm approve-builds <pkg>`, which records it under `allowBuilds` in `pnpm-workspace.yaml`.
-- `create_crashes.sql` is the legacy schema. It disagrees with the legacy queries on column names (see epic #4) and will be replaced by migrations (#18).
+- Schema changes go through migrations: edit `src/schema.ts`, run `pnpm db:generate`, commit the SQL in `drizzle/`, and apply it with `pnpm db:migrate`. The app never migrates on startup.

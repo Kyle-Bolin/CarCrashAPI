@@ -13,6 +13,9 @@ import {
  * One row per crash in the US Accidents dataset. Column names are unquoted snake_case
  * so hand-written SQL needs no quoting. Everything except `id` is nullable: the dataset
  * has gaps, and a missing value must stay NULL rather than become 0 or "".
+ *
+ * Timestamps are `timestamptz`. The dataset's times are local wall-clock times, so the
+ * loader must convert each one from its row's `timezone` to UTC before inserting.
  */
 export const crashes = pgTable(
   "crashes",
@@ -20,8 +23,8 @@ export const crashes = pgTable(
     id: text("id").primaryKey(),
     source: text("source"),
     severity: integer("severity"),
-    startTime: timestamp("start_time", { mode: "date" }),
-    endTime: timestamp("end_time", { mode: "date" }),
+    startTime: timestamp("start_time", { mode: "date", withTimezone: true }),
+    endTime: timestamp("end_time", { mode: "date", withTimezone: true }),
     startLat: doublePrecision("start_lat"),
     startLng: doublePrecision("start_lng"),
     endLat: doublePrecision("end_lat"),
@@ -36,7 +39,10 @@ export const crashes = pgTable(
     country: text("country"),
     timezone: text("timezone"),
     airportCode: text("airport_code"),
-    weatherTimestamp: timestamp("weather_timestamp", { mode: "date" }),
+    weatherTimestamp: timestamp("weather_timestamp", {
+      mode: "date",
+      withTimezone: true,
+    }),
     temperature: doublePrecision("temperature"),
     windChill: doublePrecision("wind_chill"),
     humidity: doublePrecision("humidity"),
