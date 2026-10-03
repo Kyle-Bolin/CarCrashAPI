@@ -46,7 +46,19 @@ The stack decision is tracked in [ADR-001 (#12)](https://github.com/Kyle-Bolin/C
 
 ## Quick start
 
-Docker-based local development is planned in [#17](https://github.com/Kyle-Bolin/CarCrashAPI/issues/17). Until then, run the API directly. You need Node 24 (see `.nvmrc`) and pnpm (the version is pinned in `package.json`).
+You need [Docker](https://docs.docker.com/get-docker/) with Compose. This starts the API and a PostgreSQL database:
+
+```sh
+cp .env.example .env
+docker compose up
+curl localhost:3000/healthz       # {"status":"ok"}
+```
+
+CI runs these same steps on every pull request (the "Docker smoke test" job).
+
+### Without Docker
+
+You need Node 24 (see `.nvmrc`), pnpm (the version is pinned in `package.json`), and a reachable PostgreSQL. The server validates its config and checks the database at startup, so it exits if `DATABASE_URL` is missing or the database is down. Point `DATABASE_URL` in `.env` at your database (the default in `.env.example` is `localhost:5432`), then:
 
 ```sh
 pnpm install --frozen-lockfile
