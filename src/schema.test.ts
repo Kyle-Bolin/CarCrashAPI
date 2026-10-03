@@ -55,6 +55,20 @@ describe.skipIf(!process.env.MIGRATED_DATABASE_URL)("migrated database", () => {
     expect(actual).toEqual(expected);
   });
 
+  it("stores the crash timestamps with a time zone", async () => {
+    const rows = await query<{ column_name: string; data_type: string }>(
+      "select column_name, data_type from information_schema.columns where table_name = 'crashes' and column_name in ('start_time', 'end_time', 'weather_timestamp') order by column_name",
+    );
+    expect(rows).toEqual([
+      { column_name: "end_time", data_type: "timestamp with time zone" },
+      { column_name: "start_time", data_type: "timestamp with time zone" },
+      {
+        column_name: "weather_timestamp",
+        data_type: "timestamp with time zone",
+      },
+    ]);
+  });
+
   it("indexes the parity queries", async () => {
     const rows = await query<{ indexdef: string }>(
       "select indexdef from pg_indexes where tablename = 'crashes'",
