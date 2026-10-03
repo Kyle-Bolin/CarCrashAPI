@@ -58,6 +58,45 @@ jobs:
       - run: pnpm build
       - run: pnpm bundle:lambda
 
+  migrations:
+    name: Migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: carcrash
+          POSTGRES_PASSWORD: carcrash
+          POSTGRES_DB: carcrash
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U carcrash -d carcrash"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 15
+    env:
+      DATABASE_URL: postgres://carcrash:carcrash@localhost:5432/carcrash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - name: Migrate a fresh database
+        run: pnpm db:migrate
+      - name: Migrating again changes nothing
+        run: pnpm db:migrate
+      - name: The schema matches what the code queries
+        run: pnpm vitest run src/schema.test.ts
+        env:
+          MIGRATED_DATABASE_URL: postgres://carcrash:carcrash@localhost:5432/carcrash
+      - name: The schema in code has no unmigrated changes
+        run: |
+          pnpm db:generate
+          git diff --exit-code -- drizzle
+          test -z "$(git status --porcelain -- drizzle)"
+
   docker:
     name: Docker smoke test
     runs-on: ubuntu-latest

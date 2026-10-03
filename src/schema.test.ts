@@ -1,0 +1,75 @@
+import { getTableColumns } from "drizzle-orm";
+import { getTableConfig } from "drizzle-orm/pg-core";
+import pg from "pg";
+import { describe, expect, it } from "vitest";
+import { crashes } from "./schema.js";
+
+const columns = Object.values(getTableColumns(crashes));
+
+describe("crashes schema definition", () => {
+  it("uses unquoted-safe snake_case column names", () => {
+    for (const column of columns) {
+      expect(column.name).toMatch(/^[a-z][a-z0-9_]*$/);
+    }
+  });
+
+  it("declares the two parity indexes", () => {
+    const names = getTableConfig(crashes).indexes.map((i) => i.config.name);
+    expect(names).toEqual([
+      "crashes_state_lower_city_idx",
+      "crashes_start_time_idx",
+    ]);
+  });
+
+  it("makes only the id column required", () => {
+    const required = columns.filter((c) => c.notNull).map((c) => c.name);
+    expect(required).toEqual(["id"]);
+  });
+});
+
+// The CI "Migrations" job sets MIGRATED_DATABASE_URL after running `pnpm db:migrate`
+// against a fresh database, so this checks the migrations match the schema in code.
+describe.skipIf(!process.env.MIGRATED_DATABASE_URL)("migrated database", () => {
+  async function query<T extends pg.QueryResultRow>(sql: string) {
+    const client = new pg.Client({
+      connectionString: process.env.MIGRATED_DATABASE_URL,
+    });
+    await client.connect();
+    try {
+      return (await client.query<T>(sql)).rows;
+    } finally {
+      await client.end();
+    }
+  }
+
+  it("has the columns and nullability the code expects", async () => {
+    const rows = await query<{ column_name: string; is_nullable: string }>(
+      "select column_name, is_nullable from information_schema.columns where table_name = 'crashes'",
+    );
+    const actual = Object.fromEntries(
+      rows.map((r) => [r.column_name, r.is_nullable === "YES"]),
+    );
+    const expected = Object.fromEntries(
+      columns.map((c) => [c.name, !c.notNull]),
+    );
+    expect(actual).toEqual(expected);
+  });
+
+  it("indexes the parity queries", async () => {
+    const rows = await query<{ indexdef: string }>(
+      "select indexdef from pg_indexes where tablename = 'crashes'",
+    );
+    const defs = rows.map((r) => r.indexdef).join("\n");
+    expect(defs).toContain("(state, lower(city))");
+    expect(defs).toContain("(start_time)");
+  });
+
+  it("accepts the dataset's text ids and keeps NULL as NULL", async () => {
+    await query("delete from crashes where id = 'A-1'");
+    await query("insert into crashes (id, state) values ('A-1', 'OH')");
+    const rows = await query<{ temperature: number | null }>(
+      "select temperature from crashes where id = 'A-1'",
+    );
+    expect(rows[0]?.temperature).toBeNull();
+  });
+});
