@@ -77,9 +77,17 @@ pnpm bundle:lambda    # esbuild to dist/lambda/index.mjs
 The crash data comes from the Kaggle **US Accidents** dataset by Sobhan Moosavi
 et al. (2016–2023). It is **not** covered by the code license. Kaggle lists it as
 CC BY-NC-SA 4.0, which requires attribution, non-commercial use and share-alike
-for redistributed subsets. The license, the hosted scope and the exact citation
-are being decided in [ADR-003 (#14)](https://github.com/Kyle-Bolin/CarCrashAPI/issues/14), and this
-section will be updated to match once that is accepted.
+for redistributed subsets, such as test fixtures. The license still needs to be
+confirmed against the Kaggle page. This project is a non-commercial portfolio demo.
+
+The proposed scope (a subset of states, loaded by a re-runnable script, with a
+committed sample of about 1,000 rows for tests) is in
+[ADR-003](docs/adr/0003-data-scope.md), which is not accepted yet.
+
+If you use the data, please cite:
+
+- Sobhan Moosavi, Mohammad Hossein Samavatian, Srinivasan Parthasarathy, and Rajiv Ramnath. "A Countrywide Traffic Accident Dataset." 2019.
+- Sobhan Moosavi, Mohammad Hossein Samavatian, Srinivasan Parthasarathy, Radu Teodorescu, and Rajiv Ramnath. "Accident Risk Prediction based on Heterogeneous Sparse Data: New Dataset and Insights." In proceedings of the 27th ACM SIGSPATIAL International Conference on Advances in Geographic Information Systems, ACM, 2019.
 
 The source code does not have a license yet, so all rights are reserved for now (`UNLICENSED` in `package.json`).
 
