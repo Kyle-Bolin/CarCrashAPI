@@ -6,6 +6,9 @@ set -euo pipefail
 read -r -a compose <<<"${COMPOSE:-docker compose}"
 step() { printf '\n=== %s ===\n' "$*"; }
 
+step "Create .env from .env.example, as the README quick start does"
+[ -f .env ] || cp .env.example .env
+
 step "Start the stack and wait for a healthy database"
 "${compose[@]}" up --build --detach --wait --wait-timeout 180
 
