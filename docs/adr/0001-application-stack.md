@@ -58,4 +58,4 @@ Proposed: adopt the stack as listed.
 - **Follow-ups:**
   - `@hono/zod-openapi`, Drizzle and `pg` are not yet dependencies. They arrive with the issues that need them (migrations: #18).
   - Revisit Prisma if Drizzle's migration tooling proves inadequate, and Fastify if a needed plugin has no Hono equivalent.
-  - Database hosting and connection handling from Lambda belong to ADR-003 (#14).
+  - Database hosting and connection handling from Lambda belong to ADR-002 (#13).
