@@ -35,17 +35,6 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm typecheck
 
-  test:
-    name: Unit tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/setup
-      - run: pnpm test:coverage
-
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -57,9 +46,20 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm build
       - run: pnpm bundle:lambda
+      - name: The Lambda bundle loads and answers requests
+        run: pnpm test:lambda
+      - name: The committed OpenAPI document matches the code
+        run: |
+          pnpm openapi
+          git diff --exit-code -- openapi.json
+      - name: The committed fixture matches its generator
+        run: |
+          pnpm fixture:generate
+          git diff --exit-code -- fixtures/crashes.csv
 
-  migrations:
-    name: Migrations
+  test:
+    # Unit and integration tests in one job, so coverage counts the database code.
+    name: Tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
     services:
@@ -87,10 +87,12 @@ jobs:
         run: pnpm db:migrate
       - name: Migrating again changes nothing
         run: pnpm db:migrate
-      - name: The schema matches what the code queries
-        run: pnpm vitest run src/schema.test.ts
+      - name: Load the sample data
+        run: pnpm data:seed
+      - name: Unit and integration tests, with the coverage gate
+        run: pnpm test:coverage
         env:
-          MIGRATED_DATABASE_URL: postgres://carcrash:carcrash@localhost:5432/carcrash
+          TEST_DATABASE_URL: postgres://carcrash:carcrash@localhost:5432/carcrash
       - name: The schema in code has no unmigrated changes
         run: |
           pnpm db:generate

@@ -1,3 +1,14 @@
+# `docker compose up` starts Postgres, applies migrations, loads the 1,000-row sample
+# (fixtures/crashes.csv), then starts the API on http://localhost:3000.
+x-app: &app
+  build: .
+  image: carcrashapi:local
+  # Node ignores SIGTERM as PID 1; an init process makes Ctrl+C and `down` stop at once.
+  init: true
+  env_file:
+    - path: .env
+      required: false
+
 services:
   db:
     image: postgres:17
@@ -15,19 +26,44 @@ services:
       timeout: 3s
       retries: 15
 
+  migrate:
+    <<: *app
+    command: ["node", "dist/cli/migrate.js"]
+    environment:
+      DATABASE_URL: postgres://carcrash:carcrash@db:5432/carcrash
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Upserts by ID, so it is safe on every `up`. Sample IDs start with SYN-.
+  seed:
+    <<: *app
+    command: ["node", "dist/cli/load.js", "--file", "fixtures/crashes.csv"]
+    environment:
+      DATABASE_URL: postgres://carcrash:carcrash@db:5432/carcrash
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
   api:
-    build: .
-    env_file:
-      - path: .env
-        required: false
+    <<: *app
     environment:
       DATABASE_URL: postgres://carcrash:carcrash@db:5432/carcrash
       PORT: "3000"
     ports:
       - "${PORT:-3000}:3000"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://localhost:3000/healthz').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 2s
+      timeout: 3s
+      retries: 15
     depends_on:
-      db:
-        condition: service_healthy
+      seed:
+        condition: service_completed_successfully
 
 volumes:
   pgdata:

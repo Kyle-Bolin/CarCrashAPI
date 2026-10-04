@@ -1,8 +1,9 @@
 import { getTableColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
-import pg from "pg";
+import type pg from "pg";
 import { describe, expect, it } from "vitest";
 import { crashes } from "./schema.js";
+import { describeWithDatabase, withClient } from "./testing/db.js";
 
 const columns = Object.values(getTableColumns(crashes));
 
@@ -17,7 +18,7 @@ describe("crashes schema definition", () => {
     const names = getTableConfig(crashes).indexes.map((i) => i.config.name);
     expect(names).toEqual([
       "crashes_state_lower_city_idx",
-      "crashes_start_time_idx",
+      "crashes_start_time_id_idx",
     ]);
   });
 
@@ -27,20 +28,11 @@ describe("crashes schema definition", () => {
   });
 });
 
-// The CI "Migrations" job sets MIGRATED_DATABASE_URL after running `pnpm db:migrate`
-// against a fresh database, so this checks the migrations match the schema in code.
-describe.skipIf(!process.env.MIGRATED_DATABASE_URL)("migrated database", () => {
-  async function query<T extends pg.QueryResultRow>(sql: string) {
-    const client = new pg.Client({
-      connectionString: process.env.MIGRATED_DATABASE_URL,
-    });
-    await client.connect();
-    try {
-      return (await client.query<T>(sql)).rows;
-    } finally {
-      await client.end();
-    }
-  }
+// CI's "Tests" job runs `pnpm db:migrate` on a fresh database first, so these check
+// that the migrations produce the schema the code expects.
+describeWithDatabase("migrated database", () => {
+  const query = <T extends pg.QueryResultRow>(sql: string) =>
+    withClient(async (client) => (await client.query<T>(sql)).rows);
 
   it("has the columns and nullability the code expects", async () => {
     const rows = await query<{ column_name: string; is_nullable: string }>(
@@ -75,15 +67,19 @@ describe.skipIf(!process.env.MIGRATED_DATABASE_URL)("migrated database", () => {
     );
     const defs = rows.map((r) => r.indexdef).join("\n");
     expect(defs).toContain("(state, lower(city))");
-    expect(defs).toContain("(start_time)");
+    expect(defs).toContain("(start_time DESC NULLS LAST, id)");
   });
 
   it("accepts the dataset's text ids and keeps NULL as NULL", async () => {
     await query("delete from crashes where id = 'A-1'");
-    await query("insert into crashes (id, state) values ('A-1', 'OH')");
-    const rows = await query<{ temperature: number | null }>(
-      "select temperature from crashes where id = 'A-1'",
-    );
-    expect(rows[0]?.temperature).toBeNull();
+    try {
+      await query("insert into crashes (id, state) values ('A-1', 'OH')");
+      const rows = await query<{ temperature: number | null }>(
+        "select temperature from crashes where id = 'A-1'",
+      );
+      expect(rows[0]?.temperature).toBeNull();
+    } finally {
+      await query("delete from crashes where id = 'A-1'");
+    }
   });
 });
