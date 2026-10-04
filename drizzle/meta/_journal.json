@@ -8,6 +8,13 @@
       "when": 1791065438645,
       "tag": "0000_overconfident_mandroid",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791073028216,
+      "tag": "0001_tranquil_speed",
+      "breakpoints": true
     }
   ]
 }

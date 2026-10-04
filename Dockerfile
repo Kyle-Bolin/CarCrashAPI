@@ -16,6 +16,9 @@ WORKDIR /app
 COPY --from=build --chown=node:node /app/package.json ./
 COPY --from=build --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/dist ./dist
+# Migrations and the sample data, for the one-shot migrate and seed commands.
+COPY --chown=node:node drizzle ./drizzle
+COPY --chown=node:node fixtures/crashes.csv ./fixtures/crashes.csv
 USER node
 EXPOSE 3000
 CMD ["node", "dist/server.js"]

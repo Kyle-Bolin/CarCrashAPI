@@ -1,0 +1,773 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "CarCrashAPI",
+    "version": "1.0.0",
+    "description": "Read-only REST API over the US Accidents dataset (Sobhan Moosavi et al., 2016–2023).\n\nTimes are UTC. A value the dataset doesn't have is `null`. Errors use RFC 9457\n`application/problem+json`. Local development serves 1,000 synthetic crashes\nin the dataset's format."
+  },
+  "tags": [
+    {
+      "name": "Crashes",
+      "description": "Look up crashes."
+    },
+    {
+      "name": "Health",
+      "description": "Service status."
+    }
+  ],
+  "components": {
+    "schemas": {
+      "CrashList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Crash"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "Crash": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique crash ID from the dataset.",
+            "example": "A-2716600"
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Which upstream feed reported the crash.",
+            "example": "Source1"
+          },
+          "severity": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 4,
+            "description": "Impact on traffic, from 1 (short delay) to 4 (long delay).",
+            "example": 2
+          },
+          "startTime": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When the crash started, in UTC.",
+            "example": "2021-07-12T13:25:00.000Z"
+          },
+          "endTime": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When its impact on traffic ended, in UTC.",
+            "example": "2021-07-12T15:41:00.000Z"
+          },
+          "startLat": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Latitude where the crash started.",
+            "example": 39.785123
+          },
+          "startLng": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Longitude where the crash started.",
+            "example": -105.037194
+          },
+          "endLat": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Latitude where the affected stretch of road ends.",
+            "example": 39.79
+          },
+          "endLng": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Longitude where the affected stretch of road ends.",
+            "example": -105.04
+          },
+          "distance": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Length of road affected, in miles.",
+            "example": 0.951
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Free-text description from the source.",
+            "example": "Accident on I-70 E at Exit 12."
+          },
+          "street": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Street name.",
+            "example": "I-70 E"
+          },
+          "city": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "City.",
+            "example": "Denver"
+          },
+          "county": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "County.",
+            "example": "Denver"
+          },
+          "state": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Two-letter state code.",
+            "example": "CO"
+          },
+          "zipcode": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ZIP or ZIP+4 code.",
+            "example": "80202"
+          },
+          "country": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Country code.",
+            "example": "US"
+          },
+          "timezone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "IANA time zone of the crash location. The dataset's legacy US/* names are mapped to canonical ones.",
+            "example": "America/Denver"
+          },
+          "airportCode": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Nearest airport weather station.",
+            "example": "KDEN"
+          },
+          "weatherTimestamp": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When the weather observation was taken, in UTC.",
+            "example": "2021-07-12T13:19:00.000Z"
+          },
+          "temperature": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Temperature, in °F.",
+            "example": 78.1
+          },
+          "windChill": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Wind chill, in °F.",
+            "example": 78.1
+          },
+          "humidity": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Relative humidity, in percent.",
+            "example": 41
+          },
+          "pressure": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Air pressure, in inches of mercury.",
+            "example": 30.02
+          },
+          "visibility": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Visibility, in miles.",
+            "example": 10
+          },
+          "windDirection": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Wind direction, such as SW, CALM or VAR.",
+            "example": "SW"
+          },
+          "windSpeed": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Wind speed, in mph.",
+            "example": 8.1
+          },
+          "precipitation": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Precipitation, in inches.",
+            "example": 0
+          },
+          "weatherCondition": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Weather condition, such as Light Rain.",
+            "example": "Fair"
+          },
+          "amenity": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "An amenity is nearby.",
+            "example": false
+          },
+          "bump": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "A speed bump or hump is nearby.",
+            "example": false
+          },
+          "crossing": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "A crossing is nearby.",
+            "example": false
+          },
+          "giveWay": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "A give-way sign is nearby.",
+            "example": false
+          },
+          "junction": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "A junction is nearby.",
+            "example": false
+          },
+          "noExit": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "A no-exit sign is nearby.",
+            "example": false
+          },
+          "railway": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "A railway is nearby.",
+            "example": false
+          },
+          "roundabout": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "A roundabout is nearby.",
+            "example": false
+          },
+          "station": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "A station is nearby.",
+            "example": false
+          },
+          "stop": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "A stop sign is nearby.",
+            "example": false
+          },
+          "trafficCalming": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Traffic calming is nearby.",
+            "example": false
+          },
+          "trafficSignal": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "A traffic signal is nearby.",
+            "example": false
+          },
+          "turningLoop": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "A turning loop is nearby.",
+            "example": false
+          },
+          "sunriseSunset": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "Day",
+              "Night",
+              null
+            ],
+            "description": "Day or night, by sunrise and sunset.",
+            "example": "Day"
+          },
+          "civilTwilight": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "Day",
+              "Night",
+              null
+            ],
+            "description": "Day or night, by civil twilight.",
+            "example": "Day"
+          },
+          "nauticalTwilight": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "Day",
+              "Night",
+              null
+            ],
+            "description": "Day or night, by nautical twilight.",
+            "example": "Day"
+          },
+          "astronomicalTwilight": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "Day",
+              "Night",
+              null
+            ],
+            "description": "Day or night, by astronomical twilight.",
+            "example": "Day"
+          }
+        },
+        "required": [
+          "id",
+          "source",
+          "severity",
+          "startTime",
+          "endTime",
+          "startLat",
+          "startLng",
+          "endLat",
+          "endLng",
+          "distance",
+          "description",
+          "street",
+          "city",
+          "county",
+          "state",
+          "zipcode",
+          "country",
+          "timezone",
+          "airportCode",
+          "weatherTimestamp",
+          "temperature",
+          "windChill",
+          "humidity",
+          "pressure",
+          "visibility",
+          "windDirection",
+          "windSpeed",
+          "precipitation",
+          "weatherCondition",
+          "amenity",
+          "bump",
+          "crossing",
+          "giveWay",
+          "junction",
+          "noExit",
+          "railway",
+          "roundabout",
+          "station",
+          "stop",
+          "trafficCalming",
+          "trafficSignal",
+          "turningLoop",
+          "sunriseSunset",
+          "civilTwilight",
+          "nauticalTwilight",
+          "astronomicalTwilight"
+        ]
+      },
+      "Problem": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "A URI for the problem type. `about:blank` means the HTTP status says it all.",
+            "example": "about:blank"
+          },
+          "title": {
+            "type": "string",
+            "example": "Not Found"
+          },
+          "status": {
+            "type": "integer",
+            "example": 404
+          },
+          "detail": {
+            "type": "string",
+            "example": "No crash has the ID A-0."
+          },
+          "instance": {
+            "type": "string",
+            "description": "The request path that produced the problem.",
+            "example": "/v1/crashes/A-0"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "in": {
+                  "type": "string",
+                  "example": "query"
+                },
+                "name": {
+                  "type": "string",
+                  "example": "limit"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Too big: expected number to be <=1000"
+                }
+              },
+              "required": [
+                "in",
+                "name",
+                "message"
+              ]
+            },
+            "description": "For 400 responses, each invalid parameter."
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/healthz": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health check",
+        "description": "Returns ok while the server is running.",
+        "responses": {
+          "200": {
+            "description": "The server is running.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ok"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/crashes": {
+      "get": {
+        "tags": [
+          "Crashes"
+        ],
+        "summary": "List crashes",
+        "description": "Newest crashes first. Crashes with no start time come last.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 100,
+              "description": "How many crashes to return, from 1 to 1000. Defaults to 100.",
+              "example": 25
+            },
+            "required": false,
+            "description": "How many crashes to return, from 1 to 1000. Defaults to 100.",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The crashes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CrashList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A parameter is invalid.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The server failed to handle the request.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/crashes/{id}": {
+      "get": {
+        "tags": [
+          "Crashes"
+        ],
+        "summary": "Get a crash",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "example": "A-2716600"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The crash.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Crash"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A parameter is invalid.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No crash has this ID.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The server failed to handle the request.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/states/{state}/cities/{city}/crashes": {
+      "get": {
+        "tags": [
+          "Crashes"
+        ],
+        "summary": "List crashes in a city",
+        "description": "Matches the city name case-insensitively, newest crashes first. A city with no crashes returns an empty list.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z]{2}$",
+              "description": "Two-letter state code, in any case.",
+              "example": "OH"
+            },
+            "required": true,
+            "description": "Two-letter state code, in any case.",
+            "name": "state",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "example": "Columbus"
+            },
+            "required": true,
+            "name": "city",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 100,
+              "description": "How many crashes to return, from 1 to 1000. Defaults to 100.",
+              "example": 25
+            },
+            "required": false,
+            "description": "How many crashes to return, from 1 to 1000. Defaults to 100.",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The crashes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CrashList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A parameter is invalid.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The server failed to handle the request.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {}
+}

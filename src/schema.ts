@@ -75,6 +75,11 @@ export const crashes = pgTable(
       table.state,
       sql`lower(${table.city})`,
     ),
-    index("crashes_start_time_idx").on(table.startTime),
+    // Serves the newest-first listing (ORDER BY start_time DESC NULLS LAST, id) straight
+    // from the index, and range filters on start_time.
+    index("crashes_start_time_id_idx").on(
+      table.startTime.desc().nullsLast(),
+      table.id,
+    ),
   ],
 );
