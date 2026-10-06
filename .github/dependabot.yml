@@ -28,3 +28,33 @@ updates:
     commit-message:
       prefix: ci
       include: scope
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      docker-minor-and-patch:
+        update-types: [minor, patch]
+    commit-message:
+      prefix: build
+      include: scope
+
+  # infra/ is planned; globs that match nothing are ignored until it exists.
+  - package-ecosystem: terraform
+    directories:
+      - /infra/bootstrap*
+      - /infra/envs/*
+      - /infra/modules/*
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      terraform-minor-and-patch:
+        update-types: [minor, patch]
+    commit-message:
+      prefix: build
+      include: scope
