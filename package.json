@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
-    "@types/node": "^26.6.3",
+    "@types/node": "^26.6.4",
     "@types/pg": "^8.23.1",
     "@types/pg-copy-streams": "^1.2.5",
     "@vitest/coverage-v8": "^5.0.3",
